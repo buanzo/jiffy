@@ -17,4 +17,19 @@ Jiffy is a secure instant messaging system developed using OpenPGP and TLS, and 
 		eval $(gpg-agent --daemon)
 
 	Then you can run gpg-agent. It'll tell you if the Agent is indeed running and available. Now try ./JiffyClient.py
-	
+
+IMPORTANT:
+
+The jiffy server needs to trust your keyid.
+
+YOU need to trust the server's keyid.
+
+In this initial release, the server does not know how to forward jiffies to other servers. We need to bootstrap a community of trusted servers
+and develop federation/routing.
+
+SO: Anyone you want to IM with using Jiffy, need to do that (add the server's keyid and trust it, or at least --lsign it).
+
+You can always jiffy me, 0x6857704D.
+
+There are no rate controls, no anti-spam, no nothing, cause all that works off gpg's trust model. ok?
+
