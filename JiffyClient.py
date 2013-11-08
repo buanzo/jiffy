@@ -109,7 +109,7 @@ class JiffyClient:
     r = requests.post(self.SERVER_URL+"/JiffySession",data=payload,headers=self.defaultRequestHeaders,timeout=5)
     self.sessionUUIDS=self.gpgDecryptAndVerify(r.text)
     if self.sessionUUIDS == None:
-      print("JiffyClient: [ERROR]. Verify entire trust chain.")
+      print("JiffyClient: [ERROR]. Is the GPG Agent running? \"eval $(gpg-agent --daemon)\". Alternatively, verify entire trust chain.")
       sys.exit(5)
     self.startSession2()
     return None
@@ -169,6 +169,12 @@ jc.startSession()
 #example how to send a jiffy to self
 #jiffies = [(jc.CLIENT_KEY,'HELLO SCREEN CAPTURE')]
 #jc.sendJiffies(jiffies)
-
+if len(sys.argv)==3:
+  rcpt=sys.argv[1]
+  msg=sys.argv[2]
+  jiffies = [(rcpt,msg)]
+  jc.sendJiffies(jiffies)
+  print("JiffyClient: Jiffy sent")
+        
 jiffies = jc.receiveJiffies()
 jc.endSession()
