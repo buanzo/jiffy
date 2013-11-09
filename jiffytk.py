@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-
+#TODO: multithreading. receive jiffies and dispatch message windows, etc.
 __author__ = "Arturo 'Buanzo' Busleiman <buanzo@buanzo.com.ar> PUBKEY:6857704D@keys.gnupg.net"
 __version__ = "0.1.0"
 
