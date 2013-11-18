@@ -67,6 +67,7 @@ jc.startSession()
 
 
 def on_after_chatWindow(ndx):
+  ndx=int(ndx)
   index=int(ndx)+1
   while dataQueues[index].qsize() > 0:
     jiffy = dataQueues[index].get(timeout=0.2)
@@ -79,7 +80,7 @@ def onEnter(self):
   index = int(self.widget.name.split('|')[0])
   uid = self.widget.name.split('[')[1].split(']')[0]
   msg = self.widget.get()
-  chatWindows[str(index)].t1.insert(END,"---> %s\n" % msg)
+  chatWindows[index].t1.insert(END,"---> %s\n" % msg)
   self.widget.delete(0,END)
   jiffies = [(uid,msg)]
   jc.sendJiffies(jiffies)  
@@ -89,7 +90,7 @@ def dblClickMethod(self):
 #  print("\nSELF WIDGET",self.widget.__dict__)
 #  print("\nSELF WIDGET DATA",self.widget.curselection())
 #print("\n.get() =",self.widget.get(self.widget.curselection()))
-  index = self.widget.curselection()[0]
+  index = int(self.widget.curselection()[0])
   wmTitle = "Jiffy Chat: "+self.widget.get(index)
   chatWindows[index] = Tk()
   chatWindows[index].t1 = Text(chatWindows[index],width=60)
@@ -147,7 +148,7 @@ for key in public_keys:
     Lb1.insert(i,s)
     # ... and create corresponding dataQueues[i]
     dataQueues[i]=queue.Queue(maxsize=0)
-    KEY_TO_INDEX[key['keyid']]=i
+    KEY_TO_INDEX[key['keyid']]=int(i)
 
 # autofix width
 Lb1.autowidth(250)
