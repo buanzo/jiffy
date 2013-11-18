@@ -26,15 +26,20 @@ from JiffyClient import JiffyClient
 global jc
 global top
 global dataQueues
+global workQueue
 global chatWindows
 global KEY_TO_INDEX
 global AWA
 
 AWA = True
+
 # the index will correspond to Lb1 item index and will be a tk reference to a chat window or data queue
 dataQueues = {}
+workQueue = queue.Queue()
 chatWindows = {} 
 KEY_TO_INDEX = {}
+
+JIFFYRECEIVEPOLLTIME=5
 
 #to enable logging to jiffyclient.log
 #logging.basicConfig(level=logging.DEBUG, filename="jiffyclient.log",filemode="w", format="%(asctime)s %(levelname)-5s %(name)-10s %(threadName)-10s %(message)s")
@@ -80,10 +85,11 @@ def onEnter(self):
   index = int(self.widget.name.split('|')[0])
   uid = self.widget.name.split('[')[1].split(']')[0]
   msg = self.widget.get()
+  
   chatWindows[index].t1.insert(END,"---> %s\n" % msg)
   self.widget.delete(0,END)
   jiffies = [(uid,msg)]
-  jc.sendJiffies(jiffies)  
+  workQueue.put(jiffies)
 
 def dblClickMethod(self):
 #  print("SELF",self.__dict__)
@@ -154,7 +160,7 @@ for key in public_keys:
 Lb1.autowidth(250)
 Lb1.pack()
 
-# threading function that will poll for incoming jiffies
+# threaded function that will poll for incoming jiffies
 # and put()s jiffies into the corresponding dataqueue
 def threaded_jiffyReceiveDispatcher():
   while AWA==True:
@@ -164,8 +170,16 @@ def threaded_jiffyReceiveDispatcher():
       for jiffy in jiffies:
         if jiffy[0] in KEY_TO_INDEX: # incoming jiffy's key is in local contact list
           dataQueues[KEY_TO_INDEX[jiffy[0]]].put(jiffy)
-    time.sleep(5)
+    time.sleep(JIFFYRECEIVEPOLLTIME)
     
+# threaded function that sends jiffies
+def threaded_jiffySendDispatcher():
+  while AWA==True:
+    if workQueue.qsize() > 0:
+      jiffy = dataQueues[index].get(timeout=0.2)
+      jc.sendJiffies(jiffies)  
+    time.sleep(0.5)
+
 def on_after_LB1():
   for i in dataQueues.keys():
     if dataQueues[i].qsize() > 0:
