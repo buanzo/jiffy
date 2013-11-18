@@ -1,4 +1,8 @@
 #!/usr/bin/python3
+
+__author__ = "Arturo 'Buanzo' Busleiman <buanzo@buanzo.com.ar> PUBKEY:6857704D@keys.gnupg.net"
+__version__ = "0.1.0"
+
 import configparser
 import requests
 import gnupg
@@ -133,10 +137,10 @@ class JiffyClient:
     payload = {'session':self.gpgSignAndEncrypt(recipient=self.SERVER_KEY,data=str(self.sessionUUIDS)),'data': self.gpgSignAndEncrypt(recipient=self.SERVER_KEY,data=el_xml)}
     r = requests.post(self.SERVER_URL+"/JiffySend",data=payload,headers=self.defaultRequestHeaders,timeout=30)
 
-  def showJiffy(self,jiffy):
+  def returnJiffy(self,jiffy):
     decrypted = self.gpgDecryptWithTrustCheck(jiffy.text)
     fecha=str(datetime.fromtimestamp(int(decrypted.sig_timestamp)))
-    print("["+decrypted.username+"/"+decrypted.key_id+"]["+fecha+"]: "+str(decrypted))
+    return([decrypted.key_id,fecha,str(decrypted)])
     
   def receiveJiffies(self):
     jiffies = []
@@ -147,34 +151,7 @@ class JiffyClient:
       jTop = ET.fromstring(str(decrypted))
       if jTop.tag=='Jiffies':
         jCount = jTop.get('count') #number of jiffies
-        print("There are "+jCount+" Jiffies available")
+#        print("There are "+jCount+" Jiffies available")
         for jiffy in jTop.findall('jiffy'):
-          self.showJiffy(jiffy)
-      
-#to enable logging to jiffyclient.log
-#logging.basicConfig(level=logging.DEBUG, filename="jiffyclient.log",filemode="w", format="%(asctime)s %(levelname)-5s %(name)-10s %(threadName)-10s %(message)s")
-
-
-print("JiffyClient: initializing")
-jc = JiffyClient()
-print("JiffyClient: reading configuration")
-jc.readConfig()
-print("JiffyClient: checking GnuPG Setup")
-jc.checkGPGSetup()
-print("JiffyClient: obtaining server version")
-jc.getServerVersion()
-print("JiffyClient: Starting session")
-jc.startSession()
-
-#example how to send a jiffy to self
-#jiffies = [(jc.CLIENT_KEY,'HELLO SCREEN CAPTURE')]
-#jc.sendJiffies(jiffies)
-if len(sys.argv)==3:
-  rcpt=sys.argv[1]
-  msg=sys.argv[2]
-  jiffies = [(rcpt,msg)]
-  jc.sendJiffies(jiffies)
-  print("JiffyClient: Jiffy sent")
-        
-jiffies = jc.receiveJiffies()
-jc.endSession()
+          jiffies.append(self.returnJiffy(jiffy))
+        return(jiffies)     
