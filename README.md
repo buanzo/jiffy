@@ -39,5 +39,11 @@ if you implement the jiffyserver behind a hardened Apache/nginx/lighttpd then no
 
 Please send pull requests :)
 
+THANKS:
+
+gnupg.py:__author__ = "Vinay Sajip"
+requests/__init__.py:__author__ = 'Kenneth Reitz'
+
+:)
 
 
