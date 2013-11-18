@@ -104,7 +104,7 @@ def dblClickMethod(self):
   chatWindows[index].e1.focus()
   chatWindows[index].after(500,on_after_chatWindow,index)
   chatWindows[index].wm_title(wmTitle) #TODO:add uid/keyid
-  chatWindows[index].mainloop()
+#  chatWindows[index].mainloop()
     
 #  self.widget.itemconfig(index, bg='green', fg='white')
 #  print("DOUBLE CLICK TEXT=",self.widget.get(index))
@@ -189,8 +189,11 @@ def quit(event):
 # main UI loop
 top.wm_title("Jiffy Client GUI (tkinter)")
 top.bind('<Control-c>', quit)
-top.mainloop()
-print("JiffyClient: exiting... please wait.")
+try:
+  top.mainloop()
+except KeyboardInterrupt:
+  top.quit()
+  print("JiffyClient: exiting... please wait.")
 
 # We use the global boolean "AWA" inside the threaded function for exit control
 # Yes, AWA means Are We Alive?
