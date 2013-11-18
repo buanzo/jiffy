@@ -79,6 +79,7 @@ def on_after_chatWindow(ndx):
     datum = jiffy[1]
     msg = jiffy[2]
     chatWindows[ndx].t1.insert(END,'%s: %s\n' % (datum,msg))
+    chatWindows[ndx].t1.yview(END)
   chatWindows[ndx].after(500,on_after_chatWindow,ndx)
 
 def onEnter(self):
@@ -86,6 +87,7 @@ def onEnter(self):
   uid = self.widget.name.split('[')[1].split(']')[0]
   msg = self.widget.get()
   chatWindows[index].t1.insert(END,"---> %s\n" % msg)
+  chatWindows[index].t1.yview(END)
   self.widget.delete(0,END)
   jiffies = [(uid,msg)]
   workQueue.put(jiffies)
@@ -97,6 +99,7 @@ def dblClickMethod(self):
   chatWindows[index].t1 = Text(chatWindows[index],width=60)
   chatWindows[index].t1.pack()
   chatWindows[index].t1.insert(END,"*** %s ***\n\n" % wmTitle)
+  chatWindows[index].t1.yview(END)
   chatWindows[index].l1 = Label(chatWindows[index],text="REPLY:")
   chatWindows[index].l1.pack(side=LEFT)
   chatWindows[index].e1 = Entry(chatWindows[index],bd=1,width=48)
@@ -202,15 +205,17 @@ try:
   top.mainloop()
 except KeyboardInterrupt:
   top.quit()
-  print("JiffyClient: exiting... please wait.")
+
+print("JiffyClient: exiting... please wait.")
 
 # We use the global boolean "AWA" inside the threaded function for exit control
 # Yes, AWA means Are We Alive?
 AWA=False
 
-# Wait for thread to finish...
+# end session
+jc.endSession()
+
+# Wait for threads to finish...
 th.join()
 wth.join()
 
-# end session
-jc.endSession()
