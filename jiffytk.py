@@ -85,17 +85,12 @@ def onEnter(self):
   index = int(self.widget.name.split('|')[0])
   uid = self.widget.name.split('[')[1].split(']')[0]
   msg = self.widget.get()
-  
   chatWindows[index].t1.insert(END,"---> %s\n" % msg)
   self.widget.delete(0,END)
   jiffies = [(uid,msg)]
   workQueue.put(jiffies)
 
 def dblClickMethod(self):
-#  print("SELF",self.__dict__)
-#  print("\nSELF WIDGET",self.widget.__dict__)
-#  print("\nSELF WIDGET DATA",self.widget.curselection())
-#print("\n.get() =",self.widget.get(self.widget.curselection()))
   index = int(self.widget.curselection()[0])
   wmTitle = "Jiffy Chat: "+self.widget.get(index)
   chatWindows[index] = Tk()
@@ -110,11 +105,8 @@ def dblClickMethod(self):
   chatWindows[index].e1.bind('<Return>',onEnter)
   chatWindows[index].e1.focus()
   chatWindows[index].after(500,on_after_chatWindow,index)
-  chatWindows[index].wm_title(wmTitle) #TODO:add uid/keyid
-#  chatWindows[index].mainloop()
+  chatWindows[index].wm_title(wmTitle)
     
-#  self.widget.itemconfig(index, bg='green', fg='white')
-#  print("DOUBLE CLICK TEXT=",self.widget.get(index))
 
 top = Tk()
 
@@ -176,7 +168,7 @@ def threaded_jiffyReceiveDispatcher():
 def threaded_jiffySendDispatcher():
   while AWA==True:
     if workQueue.qsize() > 0:
-      jiffy = dataQueues[index].get(timeout=0.2)
+      jiffies = workQueue.get(timeout=0.2)
       jc.sendJiffies(jiffies)  
     time.sleep(0.5)
 
@@ -197,6 +189,8 @@ Lb1.after(100,on_after_LB1)
 
 th = threading.Thread(target=threaded_jiffyReceiveDispatcher)
 th.start()
+wth = threading.Thread(target=threaded_jiffySendDispatcher)
+wth.start()
 
 def quit(event):
   top.quit()
@@ -216,6 +210,7 @@ AWA=False
 
 # Wait for thread to finish...
 th.join()
+wth.join()
 
 # end session
 jc.endSession()
