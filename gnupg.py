@@ -603,7 +603,7 @@ VERSION_RE = re.compile(r'gpg \(GnuPG\) (\d+(\.\d+)*)'.encode('utf-8'), re.I)
 
 class GPG(object):
 
-    decode_errors = 'strict'
+    decode_errors = 'replace'
 
     result_map = {
         'crypt': Crypt,

@@ -148,6 +148,13 @@ class JiffyClient:
     payload = {'session': self.gpgSignAndEncrypt(recipient=self.SERVER_KEY,data=str(self.sessionUUIDS))}
     r = self.HTTPSESSION.post(self.SERVER_URL+"/JiffyRecv",data=payload,headers=self.defaultRequestHeaders,timeout=30)
     decrypted = self.gpgDecryptAndVerify(r.text)
+    if decrypted==None:
+      # request new session
+      self.startSession()
+      r = self.HTTPSESSION.post(self.SERVER_URL+"/JiffyRecv",data=payload,headers=self.defaultRequestHeaders,timeout=30)
+      decrypted = self.gpgDecryptAndVerify(r.text)
+      if decrypted==None:
+        return None # by default we return [] so None can be used as error flag
     if decrypted.trust_level is not None and decrypted.trust_level >= decrypted.TRUST_FULLY:
       jTop = ET.fromstring(str(decrypted))
       if jTop.tag=='Jiffies':

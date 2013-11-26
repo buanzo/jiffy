@@ -95,7 +95,7 @@ def onEnter(self):
 def dblClickMethod(self):
   index = int(self.widget.curselection()[0])
   wmTitle = "Jiffy Chat: "+self.widget.get(index)
-  chatWindows[index] = Tk()
+  chatWindows[index] = Toplevel()
   chatWindows[index].t1 = Text(chatWindows[index],width=60)
   chatWindows[index].t1.pack()
   chatWindows[index].t1.insert(END,"*** %s ***\n\n" % wmTitle)
@@ -159,7 +159,12 @@ Lb1.pack()
 # and put()s jiffies into the corresponding dataqueue
 def threaded_jiffyReceiveDispatcher():
   while AWA==True:
-    jiffies = jc.receiveJiffies()
+    try:
+      jiffies = jc.receiveJiffies()
+    except:
+      pass
+    if jiffies==None:
+      top.quit()
     if len(jiffies) > 0:
       # we got jiffies, let's send the data to the proper dataqueue
       for jiffy in jiffies:
@@ -172,7 +177,10 @@ def threaded_jiffySendDispatcher():
   while AWA==True:
     if workQueue.qsize() > 0:
       jiffies = workQueue.get(timeout=0.2)
-      jc.sendJiffies(jiffies)  
+      try:
+        jc.sendJiffies(jiffies)  
+      except:
+        pass
     time.sleep(0.5)
 
 def on_after_LB1():
