@@ -46,25 +46,21 @@ class JiffyClient:
   def readConfig(self):
     try:
       self.CONFIG.read('JiffyClient.conf')
+      self.SERVER_URL=self.CONFIG['DEFAULT']['Server'] or 'https://jiffy.mailfighter.net:11443'
+      self.SERVER_KEY=self.CONFIG['DEFAULT']['ServerPubkeyId'] or '0C39B83174BA73D7'
     except:
       print("JiffyClient: JiffyClient.conf could not be read from current directory.")
       sys.exit(1)
-    self.SERVER_URL=self.CONFIG['DEFAULT']['Server'] or 'https://jiffy.mailfighter.net:11443'
-    self.SERVER_KEY=self.CONFIG['DEFAULT']['ServerPubkeyId'] or None
     try:
       self.CLIENT_KEY=self.CONFIG['jiffyclient']['LocalPubkeyId'] or None
     except:
-      print("Please edit the LocalPubkeyId parameter of the jiffyclient section of JiffyClient.conf")
+      print("ERROR: Please edit the LocalPubkeyId parameter of the jiffyclient section of JiffyClient.conf")
       sys.exit(7)
     if self.SERVER_URL.endswith('/'): self.SERVER_URL=self.SERVER_URL[:-1]
-    if self.SERVER_KEY==None or self.CLIENT_KEY==None:
-      print("JiffyClient: JiffyClient.conf lacks Local or Server pubkey IDs. Exiting.")
-      sys.exit(1)
     
   def checkGPGSetup(self):
-#    self.GPG = gnupg.GPG(use_agent=True,verbose=self.CONFIG['DEFAULT'].getboolean('VerboseGPG'))
     self.GPG = gnupg.GPG(use_agent=True,verbose=False)
-    self.GPG.encoding = 'utf-8'
+    #self.GPG.encoding = 'utf-8'
     if len(self.GPG.list_keys(True)) <= 0:
       print("JiffyClient: No GnuPG Private key available. Please setup gnupg.")
       sys.exit(2)
@@ -88,7 +84,10 @@ class JiffyClient:
       return None
 
   def gpgVerifyAndExtractText(self,data):
-    verified = self.GPG.verify(data)
+    try:
+      verified = self.GPG.verify(data)
+    except:
+      verified = self.GPG.verify(data.decode('utf-8'))
     if not verified:
       print("JiffyClient: ERROR: gpgVerify: signed response cannot be verified. Exiting...")
       sys.exit(3)

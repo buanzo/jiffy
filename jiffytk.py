@@ -158,12 +158,13 @@ Lb1.pack()
 # threaded function that will poll for incoming jiffies
 # and put()s jiffies into the corresponding dataqueue
 def threaded_jiffyReceiveDispatcher():
+  jiffies = []
   while AWA==True:
     try:
       jiffies = jc.receiveJiffies()
     except:
       pass
-    if jiffies==None:
+    if jiffies==None: #NONE flags error. len(jiffies)==0 means no jiffies.
       top.quit()
     if len(jiffies) > 0:
       # we got jiffies, let's send the data to the proper dataqueue
