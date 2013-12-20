@@ -110,7 +110,7 @@ class JiffyClient:
   def startSession(self):
     initialRSTR = str(uuid.uuid4())
     payload = {'data': self.gpgSignAndEncrypt(recipient=self.SERVER_KEY,data=initialRSTR)}
-    r = self.HTTPSESSION.post(self.SERVER_URL+"/JiffySession",data=payload,headers=self.defaultRequestHeaders,timeout=5)
+    r = self.HTTPSESSION.post(self.SERVER_URL+"/JiffySession",verify=True,data=payload,headers=self.defaultRequestHeaders,timeout=5)
     self.sessionUUIDS=self.gpgDecryptAndVerify(r.text)
     if self.sessionUUIDS == None:
       print("JiffyClient: [ERROR]. Is the GPG Agent running? \"eval $(gpg-agent --daemon)\". Alternatively, verify entire trust chain.")
@@ -120,11 +120,11 @@ class JiffyClient:
     
   def startSession2(self):
     payload = {'data': self.gpgSignAndEncrypt(recipient=self.SERVER_KEY,data=str(self.sessionUUIDS))}
-    r = self.HTTPSESSION.post(self.SERVER_URL+"/JiffySession2",data=payload,headers=self.defaultRequestHeaders,timeout=5)
+    r = self.HTTPSESSION.post(self.SERVER_URL+"/JiffySession2",verify=True,data=payload,headers=self.defaultRequestHeaders,timeout=5)
     
   def endSession(self):
     payload = {'session': self.gpgSignAndEncrypt(recipient=self.SERVER_KEY,data=str(self.sessionUUIDS))}
-    r = self.HTTPSESSION.post(self.SERVER_URL+"/JiffyBye",data=payload,headers=self.defaultRequestHeaders,timeout=5)
+    r = self.HTTPSESSION.post(self.SERVER_URL+"/JiffyBye",verify=True,data=payload,headers=self.defaultRequestHeaders,timeout=5)
     self.sessionUUIDS=None
 
   def sendJiffies(self,jiffies):
@@ -135,7 +135,7 @@ class JiffyClient:
       nodo.set('rcpt',jiffie[0]) # TODO: With extra attributes we can have routing and federation, etc
     el_xml = ET.tostring(jTop,encoding="utf-8", method="xml")
     payload = {'session':self.gpgSignAndEncrypt(recipient=self.SERVER_KEY,data=str(self.sessionUUIDS)),'data': self.gpgSignAndEncrypt(recipient=self.SERVER_KEY,data=el_xml)}
-    r = self.HTTPSESSION.post(self.SERVER_URL+"/JiffySend",data=payload,headers=self.defaultRequestHeaders,timeout=30)
+    r = self.HTTPSESSION.post(self.SERVER_URL+"/JiffySend",verify=True,data=payload,headers=self.defaultRequestHeaders,timeout=30)
 
   def returnJiffy(self,jiffy):
     decrypted = self.gpgDecryptWithTrustCheck(jiffy.text)
@@ -145,12 +145,12 @@ class JiffyClient:
   def receiveJiffies(self):
     jiffies = []
     payload = {'session': self.gpgSignAndEncrypt(recipient=self.SERVER_KEY,data=str(self.sessionUUIDS))}
-    r = self.HTTPSESSION.post(self.SERVER_URL+"/JiffyRecv",data=payload,headers=self.defaultRequestHeaders,timeout=30)
+    r = self.HTTPSESSION.post(self.SERVER_URL+"/JiffyRecv",verify=True,data=payload,headers=self.defaultRequestHeaders,timeout=30)
     decrypted = self.gpgDecryptAndVerify(r.text)
     if decrypted==None:
       # request new session
       self.startSession()
-      r = self.HTTPSESSION.post(self.SERVER_URL+"/JiffyRecv",data=payload,headers=self.defaultRequestHeaders,timeout=30)
+      r = self.HTTPSESSION.post(self.SERVER_URL+"/JiffyRecv",verify=True,data=payload,headers=self.defaultRequestHeaders,timeout=30)
       decrypted = self.gpgDecryptAndVerify(r.text)
       if decrypted==None:
         return None # by default we return [] so None can be used as error flag
