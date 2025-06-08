@@ -3,6 +3,8 @@ jiffy
 
 Jiffy is a secure instant messaging system developed using OpenPGP and TLS, and based on Enigform/mod_openpgp.
 
+This project requires Python 3.12 or newer. Create a virtual environment and install dependencies with `pip install -r requirements.txt`.
+
 The only jiffy server currently running is https://jiffy.mailfighter.net:11443
 
 I have not yet released the JiffyServer code. Will try to do so in the next week weeks (that is, before the end of nov/2013)
@@ -41,8 +43,8 @@ Please send pull requests :)
 
 THANKS:
 
-gnupg.py:__author__ = "Vinay Sajip"
-requests/__init__.py:__author__ = 'Kenneth Reitz'
+python-gnupg by Vinay Sajip
+requests by Kenneth Reitz
 
 :)
 
