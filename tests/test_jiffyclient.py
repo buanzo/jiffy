@@ -3,6 +3,11 @@ import unittest
 import textwrap
 import sys
 import types
+import tempfile
+
+# Ensure the repository root is on the path so modules can be imported when
+# tests are executed from arbitrary working directories.
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Stub out the bundled 'requests' module so importing JiffyClient does not
 # require its heavy dependencies during testing.
@@ -38,27 +43,33 @@ class TestJiffyClient(unittest.TestCase):
         self.assertTrue(self.jc.lastInSigTimestamp_text)
 
     def test_read_config_missing_local_key(self):
-        tmpconf = os.path.join(os.getcwd(), 'JiffyClient.conf')
-        with open(tmpconf, 'w') as fh:
-            fh.write('[DEFAULT]\nServer=https://example.com\nServerPubkeyId=ABC123\n')
-        try:
-            with self.assertRaises(SystemExit) as cm:
-                self.jc.readConfig()
-            self.assertEqual(cm.exception.code, 7)
-        finally:
-            os.remove(tmpconf)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cwd = os.getcwd()
+            os.chdir(tmpdir)
+            tmpconf = os.path.join(tmpdir, 'JiffyClient.conf')
+            with open(tmpconf, 'w') as fh:
+                fh.write('[DEFAULT]\nServer=https://example.com\nServerPubkeyId=ABC123\n')
+            try:
+                with self.assertRaises(SystemExit) as cm:
+                    self.jc.readConfig()
+                self.assertEqual(cm.exception.code, 7)
+            finally:
+                os.chdir(cwd)
 
     def test_read_config_ok(self):
-        tmpconf = os.path.join(os.getcwd(), 'JiffyClient.conf')
-        with open(tmpconf, 'w') as fh:
-            fh.write('[DEFAULT]\nServer=https://example.com/\nServerPubkeyId=ABC123\n\n[jiffyclient]\nLocalPubkeyId=KEYID123\n')
-        try:
-            self.jc.readConfig()
-            self.assertEqual(self.jc.SERVER_URL, 'https://example.com')
-            self.assertEqual(self.jc.SERVER_KEY, 'ABC123')
-            self.assertEqual(self.jc.CLIENT_KEY, 'KEYID123')
-        finally:
-            os.remove(tmpconf)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cwd = os.getcwd()
+            os.chdir(tmpdir)
+            tmpconf = os.path.join(tmpdir, 'JiffyClient.conf')
+            with open(tmpconf, 'w') as fh:
+                fh.write('[DEFAULT]\nServer=https://example.com/\nServerPubkeyId=ABC123\n\n[jiffyclient]\nLocalPubkeyId=KEYID123\n')
+            try:
+                self.jc.readConfig()
+                self.assertEqual(self.jc.SERVER_URL, 'https://example.com')
+                self.assertEqual(self.jc.SERVER_KEY, 'ABC123')
+                self.assertEqual(self.jc.CLIENT_KEY, 'KEYID123')
+            finally:
+                os.chdir(cwd)
 
 if __name__ == '__main__':
     unittest.main()
