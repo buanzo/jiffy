@@ -19,7 +19,7 @@ from tkinter import font
 from urllib.parse import urlparse
 from datetime import datetime
 
-from JiffyClient import JiffyClient
+from JiffyClient import JiffyClient, JiffyConfigError, JiffyVerificationError
 
 global jc
 global top
@@ -45,11 +45,19 @@ JIFFYRECEIVEPOLLTIME=5
 print("JiffyClient: initializing")
 jc = JiffyClient()
 print("JiffyClient: reading configuration")
-jc.readConfig()
+try:
+  jc.readConfig()
+except JiffyConfigError as e:
+  print(f"JiffyClient: configuration error: {e}")
+  sys.exit(1)
 print("JiffyClient: checking GnuPG Setup")
 jc.checkGPGSetup()
 print("JiffyClient: obtaining server version")
-jc.getServerVersion()
+try:
+  jc.getServerVersion()
+except JiffyVerificationError as e:
+  print(f"JiffyClient: server version verification failed: {e}")
+  sys.exit(1)
 print("JiffyClient: Starting session")
 jc.startSession()
 

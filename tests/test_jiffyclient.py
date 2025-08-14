@@ -13,7 +13,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 # require its heavy dependencies during testing.
 sys.modules['requests'] = types.SimpleNamespace(Session=lambda *a, **k: object())
 
-from JiffyClient import JiffyClient
+from JiffyClient import (
+    JiffyClient,
+    JiffyConfigError,
+    JiffyVerificationError,
+)
 
 class FakeVerified:
     TRUST_FULLY = 3
@@ -50,9 +54,8 @@ class TestJiffyClient(unittest.TestCase):
             with open(tmpconf, 'w') as fh:
                 fh.write('[DEFAULT]\nServer=https://example.com\nServerPubkeyId=ABC123\n')
             try:
-                with self.assertRaises(SystemExit) as cm:
+                with self.assertRaises(JiffyConfigError):
                     self.jc.readConfig()
-                self.assertEqual(cm.exception.code, 7)
             finally:
                 os.chdir(cwd)
 
@@ -70,6 +73,11 @@ class TestJiffyClient(unittest.TestCase):
                 self.assertEqual(self.jc.CLIENT_KEY, 'KEYID123')
             finally:
                 os.chdir(cwd)
+
+    def test_gpg_verify_failure_raises(self):
+        self.jc.GPG = types.SimpleNamespace(verify=lambda text: False)
+        with self.assertRaises(JiffyVerificationError):
+            self.jc.gpgVerifyAndExtractText('data')
 
 if __name__ == '__main__':
     unittest.main()
