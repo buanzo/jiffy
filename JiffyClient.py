@@ -15,6 +15,21 @@ import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
 from datetime import datetime
 
+
+class JiffyError(Exception):
+  """Base class for JiffyClient errors."""
+  pass
+
+
+class JiffyConfigError(JiffyError):
+  """Raised when configuration cannot be loaded correctly."""
+  pass
+
+
+class JiffyVerificationError(JiffyError):
+  """Raised when a signed message cannot be verified."""
+  pass
+
 class JiffyClient:
 
   def __init__(self):
@@ -53,12 +68,12 @@ class JiffyClient:
       self.SERVER_KEY = self.CONFIG['DEFAULT'].get('ServerPubkeyId', '0C39B83174BA73D7')
     except (configparser.Error, KeyError) as e:
       logging.error("JiffyClient.conf could not be read: %s", e)
-      sys.exit(1)
+      raise JiffyConfigError("JiffyClient.conf could not be read") from e
     try:
       self.CLIENT_KEY = self.CONFIG['jiffyclient']['LocalPubkeyId'] or None
     except KeyError as e:
       logging.error("LocalPubkeyId missing in JiffyClient.conf: %s", e)
-      sys.exit(7)
+      raise JiffyConfigError("LocalPubkeyId missing in configuration") from e
     if self.SERVER_URL.endswith('/'): self.SERVER_URL=self.SERVER_URL[:-1]
     
   def checkGPGSetup(self):
@@ -98,8 +113,8 @@ class JiffyClient:
       logging.error("GPG verify failed: %s", e)
       raise
     if not verified:
-      logging.error("gpgVerify: signed response cannot be verified. Exiting...")
-      sys.exit(3)
+      logging.error("gpgVerify: signed response cannot be verified")
+      raise JiffyVerificationError("signed response cannot be verified")
     else:
       return(self.extractSignedText(verified,text))
 
