@@ -5,7 +5,7 @@ __version__ = "0.1.0"
 
 import configparser
 import requests
-import gnupg
+from gnupg import GPG
 import sys
 import time
 import logging
@@ -59,7 +59,7 @@ class JiffyClient:
     if self.SERVER_URL.endswith('/'): self.SERVER_URL=self.SERVER_URL[:-1]
     
   def checkGPGSetup(self):
-    self.GPG = gnupg.GPG(use_agent=True,verbose=False)
+    self.GPG = GPG(use_agent=True,verbose=False)
     #self.GPG.encoding = 'utf-8'
     if len(self.GPG.list_keys(True)) <= 0:
       print("JiffyClient: No GnuPG Private key available. Please setup gnupg.")
