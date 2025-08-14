@@ -3,10 +3,8 @@
 __author__ = "Arturo 'Buanzo' Busleiman <buanzo@buanzo.com.ar> PUBKEY:6857704D@keys.gnupg.net"
 __version__ = "0.1.0"
 
-import gnupg
 import configparser
 import requests
-import gnupg
 import sys
 import time
 import logging
