@@ -35,7 +35,10 @@ class JiffyClient:
     if verified.trust_level is not None and verified.trust_level >= verified.TRUST_FULLY:
       try:
         m = self.regex_SIGNEDTEXT.search(text)
-      except:
+        if not m:
+          raise ValueError("Signed text pattern not found")
+      except (AttributeError, TypeError, ValueError) as e:
+        logging.error("extractSignedText failed: %s", e)
         return None
       self.lastInSigTimestamp_text = time.asctime(time.gmtime(float(verified.sig_timestamp)))
       self.lastInSigTimestamp = verified.sig_timestamp
@@ -46,15 +49,15 @@ class JiffyClient:
   def readConfig(self):
     try:
       self.CONFIG.read('JiffyClient.conf')
-      self.SERVER_URL=self.CONFIG['DEFAULT']['Server'] or 'https://jiffy.mailfighter.net:11443'
-      self.SERVER_KEY=self.CONFIG['DEFAULT']['ServerPubkeyId'] or '0C39B83174BA73D7'
-    except:
-      print("JiffyClient: JiffyClient.conf could not be read from current directory.")
+      self.SERVER_URL = self.CONFIG['DEFAULT'].get('Server', 'https://jiffy.mailfighter.net:11443')
+      self.SERVER_KEY = self.CONFIG['DEFAULT'].get('ServerPubkeyId', '0C39B83174BA73D7')
+    except (configparser.Error, KeyError) as e:
+      logging.error("JiffyClient.conf could not be read: %s", e)
       sys.exit(1)
     try:
-      self.CLIENT_KEY=self.CONFIG['jiffyclient']['LocalPubkeyId'] or None
-    except:
-      print("ERROR: Please edit the LocalPubkeyId parameter of the jiffyclient section of JiffyClient.conf")
+      self.CLIENT_KEY = self.CONFIG['jiffyclient']['LocalPubkeyId'] or None
+    except KeyError as e:
+      logging.error("LocalPubkeyId missing in JiffyClient.conf: %s", e)
       sys.exit(7)
     if self.SERVER_URL.endswith('/'): self.SERVER_URL=self.SERVER_URL[:-1]
     
@@ -85,14 +88,20 @@ class JiffyClient:
 
   def gpgVerifyAndExtractText(self,data):
     try:
-      verified = self.GPG.verify(data)
-    except:
-      verified = self.GPG.verify(data.decode('utf-8'))
+      text = data.decode('utf-8') if isinstance(data, bytes) else data
+    except UnicodeDecodeError as e:
+      logging.error("Unicode decode error: %s", e)
+      raise
+    try:
+      verified = self.GPG.verify(text)
+    except (AttributeError, TypeError) as e:
+      logging.error("GPG verify failed: %s", e)
+      raise
     if not verified:
-      print("JiffyClient: ERROR: gpgVerify: signed response cannot be verified. Exiting...")
+      logging.error("gpgVerify: signed response cannot be verified. Exiting...")
       sys.exit(3)
     else:
-      return(self.extractSignedText(verified,data))
+      return(self.extractSignedText(verified,text))
 
   def gpgSignAndEncrypt(self,recipient,data):
     encAsciiData = self.GPG.encrypt(data,recipient,sign=self.CLIENT_KEY)
